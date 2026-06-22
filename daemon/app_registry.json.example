@@ -1,0 +1,42 @@
+[
+  {
+    "id": "firefox",
+    "display_name": "Firefox",
+    "icon_path": "/usr/share/pixmaps/firefox.png",
+    "backend": "linux",
+    "launch_target": "firefox",
+    "needs_network": true
+  },
+  {
+    "id": "files",
+    "display_name": "Files",
+    "icon_path": "/usr/share/pixmaps/folder.png",
+    "backend": "linux",
+    "launch_target": "nemo",
+    "needs_network": false
+  },
+  {
+    "id": "terminal",
+    "display_name": "Terminal",
+    "icon_path": "/usr/share/pixmaps/utilities-terminal.png",
+    "backend": "linux",
+    "launch_target": "gnome-terminal",
+    "needs_network": false
+  },
+  {
+    "id": "notepad-win",
+    "display_name": "Notepad (Windows)",
+    "icon_path": "/usr/share/pixmaps/text-editor.png",
+    "backend": "windows",
+    "launch_target": "C:\\Windows\\notepad.exe",
+    "needs_network": false
+  },
+  {
+    "id": "spotify-android",
+    "display_name": "Spotify",
+    "icon_path": "/usr/share/pixmaps/spotify.png",
+    "backend": "android",
+    "launch_target": "com.spotify.music",
+    "needs_network": true
+  }
+]

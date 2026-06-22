@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Multi-OS Workspace App Registry",
+  "description": "Schema for app_registry.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "display_name", "icon_path", "backend", "launch_target", "needs_network"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique identifier for this app (used internally by daemon/shell)",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "display_name": {
+        "type": "string",
+        "description": "Human-readable name shown in app drawer"
+      },
+      "icon_path": {
+        "type": "string",
+        "description": "Absolute path to app icon PNG file"
+      },
+      "backend": {
+        "type": "string",
+        "enum": ["linux", "windows", "android"],
+        "description": "Which OS backend this app runs on"
+      },
+      "launch_target": {
+        "type": "string",
+        "description": "Backend-specific launch command or identifier. Format depends on backend: linux: shell command (e.g. 'firefox'), windows: absolute path to .exe (e.g. 'C:\\\\Program Files\\\\App\\\\app.exe'), android: Android package name (e.g. 'com.spotify.music')"
+      },
+      "needs_network": {
+        "type": "boolean",
+        "description": "Whether this app requires internet access. If true, daemon enables network access for the backend when launching."
+      }
+    }
+  }
+}
