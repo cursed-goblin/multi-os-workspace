@@ -1,0 +1,12 @@
+[Unit]
+Description=Multi-OS Workspace Router Daemon
+After=network.target libvirtd.service
+
+[Service]
+Type=simple
+ExecStart=%h/multi-os-workspace/daemon/router_daemon.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
