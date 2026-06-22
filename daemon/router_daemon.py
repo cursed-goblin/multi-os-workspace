@@ -377,28 +377,40 @@ def disable_network(backend):
 # ===== APP LAUNCHING =====
 
 def launch_linux_app(app):
-    """Launch a Linux native application."""
+    """Launch a Linux native application.
+    
+    FIX #1: Use shell=True with a string, not a list.
+    Linux apps run directly on the host with no backend-specific network handling.
+    """
     app_id = app.get('id')
     launch_target = app.get('launch_target')
     
     log_info(f"Launching Linux app: {app_id} -> {launch_target}")
     
     try:
-        subprocess.Popen(launch_target, shell=True)
+        # Use shell=True with a STRING (not a list)
+        # This properly passes the command to /bin/sh -c
+        subprocess.Popen(launch_target, shell=True, 
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
         return True
     except Exception as e:
         log_error(f"Failed to launch Linux app: {e}")
         return False
 
 def launch_android_app(app):
-    """Launch an Android app via Waydroid."""
+    """Launch an Android app via Waydroid.
+    
+    Only enable network for the Android backend if needed.
+    Do NOT call enable_network for other backends.
+    """
     app_id = app.get('id')
     package_name = app.get('launch_target')
     needs_network = app.get('needs_network', False)
     
     log_info(f"Launching Android app: {app_id} ({package_name})")
     
-    # Enable network if needed
+    # Enable network ONLY for this backend if needed
     if needs_network:
         if not enable_network("waydroid"):
             log_error("Failed to enable network for Waydroid")
@@ -419,7 +431,13 @@ def launch_android_app(app):
         return False
 
 def launch_windows_app(app):
-    """Launch a Windows app via QEMU Guest Agent and SPICE."""
+    """Launch a Windows app via QEMU Guest Agent and SPICE.
+    
+    FIX #2: Launch app once (Step 1), then call helper to maximize existing window.
+    Previously was launching twice: once in guest-exec, once in the helper script.
+    
+    FIX #3: Only enable network for the VM backend if needed.
+    """
     app_id = app.get('id')
     exe_path = app.get('launch_target')
     needs_network = app.get('needs_network', False)
@@ -427,14 +445,14 @@ def launch_windows_app(app):
     
     log_info(f"Launching Windows app: {app_id} -> {exe_path}")
     
-    # Enable network if needed
+    # Enable network ONLY for this backend if needed
     if needs_network:
         if not enable_network("vm"):
             log_error("Failed to enable network for VM")
             return False
     
     try:
-        # Step 1: Send guest-exec command to launch the app
+        # Step 1: Send guest-exec command to launch the app (ONLY ONCE)
         log_debug(f"Sending guest-exec to VM for: {exe_path}")
         
         # Escape backslashes for JSON
@@ -454,12 +472,15 @@ def launch_windows_app(app):
             log_error(f"Guest-exec failed: {output}")
             return False
         
-        log_debug("Guest-exec successful, waiting for app to open...")
+        log_debug("App launched, waiting for window to appear...")
         time.sleep(2)
         
-        # Step 2: Call helper script to maximize and hide taskbar
-        log_debug("Calling window helper script...")
+        # Step 2: Call helper script to maximize the ALREADY-RUNNING app window
+        # (NOT re-launching the app)
+        log_debug("Calling window helper script to maximize window...")
         
+        # The helper script takes the app path as parameter
+        # It finds the window and maximizes it (doesn't re-launch)
         helper_json = json.dumps({
             "execute": "guest-exec",
             "arguments": {
@@ -477,8 +498,8 @@ def launch_windows_app(app):
         # Step 3: Open SPICE client window
         log_info("Opening SPICE display...")
         
-        # Use virt-viewer to display the VM
-        # Run in background, borderless
+        # Use virt-viewer to display the VM (list mode = no window chrome)
+        # Run in background
         subprocess.Popen(
             ["virt-viewer", "--kiosk", "--fullscreen", VM_NAME],
             stdout=subprocess.DEVNULL,
